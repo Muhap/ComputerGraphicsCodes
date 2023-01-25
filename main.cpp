@@ -1,103 +1,151 @@
-// Importing free glut library.
 #include<GL/freeglut.h>
 
+// point struct
+struct screen_point_struct{
 
-//Creating a function to display a color in window initialized in main function
+GLint x , y ;
 
-void display1()
+};
+
+// point class appears on screen
+class Point_on_screen{
+
+public :
+    GLint x , y;
+public :
+    Point_on_screen(){
+
+    x = 0;
+    y = 0;
+
+    }
+    void setcord (GLint x_val , GLint y_val)
+    {
+        x = x_val;
+        y = y_val;
+    }
+    GLint getx() const{
+    return x;}
+    GLint gety() const{
+    return y;}
+
+    void incx(){
+    x++;}
+    void incy(){
+    y++;}
+
+    void decy(){
+    y--;}
+
+};
+// function setting a pixel
+void setpixel(GLint x , GLint y)
 {
-    glClearColor(1,0,0,1);
-    // Setting the color which will clear the window
-    glClear(GL_COLOR_BUFFER_BIT);
-    // applying the color in window
-
-    glFlush();
-    // Increase the process speed
-
-}
-//-------------------------------------------------------------------------------------------------------------
-
-
-
-//Creating a function to display a red triangle in the window initialized in main
-
-void display2()
-{
-    // This Combination can be given a primitive and it will draw it
-    glBegin(GL_TRIANGLES);
-
-    // choose coloring type which is 3 f ; Accepting 3 float point
-    // red color
-    glColor3f(1.0 , 0.0 , 0.0);
-
-    // Set three vertices of the triangle
-    glVertex3f(-0.5 , -0.5 , 0.0);
-    glVertex3f(0.5, -0.5 , 0.0);
-    glVertex3f(0.0 , 0.7 , 0.0);
-
+    glBegin(GL_POINTS);
+        glVertex2i(x,y);
     glEnd();
-
-    glFlush();
-    // Increase the process speed
-
 }
 
-//-------------------------------------------------------------------------------------------------------------
-
-
-//Creating a function to display a multi-colored triangle in the window initialized in main
-
-void display3()
+// plotting all parts coordinates of ellipse
+void plotFourPoints(screen_point_struct center , Point_on_screen p )
 {
-    // This Combination can be given a primitive and it will draw it
-    glBegin(GL_TRIANGLES);
+    setpixel(center.x + p.getx() , center.y + p.gety());
+    setpixel(center.x - p.getx() , center.y + p.gety());
+    setpixel(center.x + p.getx() , center.y - p.gety());
+    setpixel(center.x - p.getx() , center.y - p.gety());
+}
+// midpoint algorithm function
+void MidpointAlg(screen_point_struct center , GLint rx , GLint ry)
+{
+    Point_on_screen current_point;
+    current_point.setcord(0 , ry);
+    GLint p1 = ry*ry - rx*rx*ry + 0.25*rx*rx;
+    GLint dx = 2*ry*ry*current_point.getx();
+    GLint dy = 2*rx*rx*current_point.gety();
+    while(dx < dy)
+    {
+        plotFourPoints(center , current_point);
+        current_point.incx();
 
-        // choose coloring type which is 3 f ; Accepting 3 float point
+        if(p1 < 0)
+        {
+            dx = 2 * ry * ry * current_point.getx();
+            p1 = p1 + rx*rx + dx;
+        }
+        else{
 
-        // red color
-        glColor3f(1.0 , 0.0 , 0.0);
-        glVertex3f(-0.5 , -0.5 , 0.0);
+            current_point.decy();
+            dx = 2*ry*ry*current_point.getx();
+            dy = 2*rx*rx*current_point.gety();
+            p1 = p1 + dx + ry*ry -dy ;
+        }
+    }
+    GLint p2 = ry*ry*(current_point.getx() + 0.5) * (current_point.getx() + 0.5)
+        + rx * rx * (current_point.gety() -1 ) * (current_point.gety() -1 ) - rx*rx*ry*ry;
+    while(current_point.gety() >= 0)
+    {
+        plotFourPoints(center , current_point);
+        current_point.decy();
 
-        //green color
-        glColor3f(0.0 , 1.0 , 0.0);
-        glVertex3f(0.5, -0.5 , 0.0);
+        if(p2 > 0)
+        {
+            dy = 2*rx*rx*current_point.gety();
+            p2 = p2 + rx * rx - dy;
+        }
+        else{
 
-        //blue color
-        glColor3f(0.0 , 0.0 , 1.0);
-        glVertex3f(0.0 , 0.7 , 0.0);
+            current_point.incx();
+            dx = 2*ry*ry*current_point.getx();
+            dy = 2*rx*rx*current_point.gety();
+            p2 = p2 + dx + rx*rx -dy ;
+        }
+    }
 
-    glEnd();
 
-    glFlush();
-    // Increase the process speed
 }
 
-int main(int argc , char** argv)
+
+// initializing the window
+void init(){
+glClearColor(1 , 1 , 1 , 1);
+glMatrixMode(GL_PROJECTION);
+gluOrtho2D(0,600,0,600);
+
+}
+// display function
+void display(){
+glClear(GL_COLOR_BUFFER_BIT);
+glPointSize(5);
+
+screen_point_struct center ;
+center.x=300;
+center.y=300;
+glColor3f(0,0,0);
+// algorithm
+MidpointAlg(center , 200 , 100);
+
+glFlush();
+
+}
+int main(int argc , char **argv)
 {
     glutInit(&argc , argv);
-    // Window Initialization .
-
-    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-    // Initialize the working mode .
-    // GLUT_SINGLE means using single buffer .
-    // GLUT_RGB means using RGB color mode ( red , green , blue ).
-
+    glutInitWindowSize(600,600);
     glutInitWindowPosition(100,100);
-    //Initialize the position of windows in pixels.
-
-    glutInitWindowSize(600,400);
-    // Set window length and width in pixels.
-
-    glutCreateWindow("New Window");
-    // Creating the window.
-
-    glutDisplayFunc(display3);
-    // This is an event handler calls the display 1 or display 2 function
-
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    glutCreateWindow("ellipse");
+    init();
+    glutDisplayFunc(display);
     glutMainLoop();
-    // Make the code running forever except when you close it.
-
-
     return 0;
 }
+
+
+
+
+
+
+
+
+
 
